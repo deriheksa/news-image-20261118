@@ -38,17 +38,27 @@ def place_picture():
 
     The copy is byte-for-byte: the file the grader reads is exactly
     the file stored in the repository, so a re-run can never drift
-    from the picture that was reviewed before submitting.
+    from the picture that was reviewed before submitting. A missing
+    source picture is a hard failure, not a silent empty output: the
+    copy raises, the run exits non-zero, and no stale image is ever
+    handed to the judge in its place.
     """
+    if not os.path.isfile(PICTURE):
+        raise SystemExit("missing entry picture: %s" % PICTURE)
     os.makedirs(TARGET_DIR, exist_ok=True)
     shutil.copyfile(PICTURE, TARGET)
     return os.path.getsize(TARGET)
 
 
-def main():
-    size = place_picture()
+def report(size):
+    """Tell the grader log what was written, in plain words."""
     print("wrote %s %d bytes" % (TARGET, size))
     print("truncated: none")
+
+
+def main():
+    size = place_picture()
+    report(size)
 
 
 if __name__ == "__main__":
