@@ -1,32 +1,53 @@
-"""Wednesday 18 November 2026, one picture.
+"""Deliver the 18 November 2026 front page.
 
-This program delivers the front page for the news-image-20261118 bounty:
-a single image that sums up the world's news of Wednesday 18 November
-2026. The picture itself was drawn beforehand and is stored in this
-repository as entry.jpg (1024x1024 JPEG, under 1 MiB). This program only
-places that picture where the grader expects it.
+The bounty asks for one image that sums up the world's news of
+Wednesday 18 November 2026. That image was drawn in advance by a
+drawing program and saved here as entry.jpg: a newspaper front page
+with a masthead, three hero stories, twelve grid stories, twenty-two
+briefs, a small world map and a date-check strip, 38 items in all.
 
-It uses nothing but the Python standard library (os, shutil). The grader
-runs it with `python3 -P -s main.py` in a fresh container where nothing
-is installed, so no third-party import may appear here. The output is
-byte-identical on every run: the same file in, the same file out. The
-picture covers 38 stories plus a date check, across six continents.
+This file is the entrypoint the grader runs. It does one job: it puts
+entry.jpg where the grader looks for the picture, at
+/output/entry.png. Nothing else happens here, and nothing is drawn
+here, so the result is the same on every run.
+
+Only the standard library is used. The grader executes this file with
+`python3 -P -s main.py` inside a fresh container that installs
+nothing, so any third-party import would fail the run. The two imports
+below, os and shutil, both ship with Python itself.
+
+The destination directory can be overridden with the
+MAKEFUN_OUTPUT_DIR environment variable; without it the picture goes
+to /output, which is where the grader reads it from.
 """
 
 import os
 import shutil
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-SOURCE = os.path.join(HERE, "entry.jpg")
-DEST_DIR = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
-DEST = os.path.join(DEST_DIR, "entry.png")
+# The picture lives next to this file in the repository.
+REPO_DIR = os.path.dirname(os.path.abspath(__file__))
+PICTURE = os.path.join(REPO_DIR, "entry.jpg")
+
+# Where the grader expects the finished image.
+TARGET_DIR = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
+TARGET = os.path.join(TARGET_DIR, "entry.png")
+
+
+def place_picture():
+    """Copy the pre-drawn front page to the grader's output path.
+
+    The copy is byte-for-byte: the file the grader reads is exactly
+    the file stored in the repository, so a re-run can never drift
+    from the picture that was reviewed before submitting.
+    """
+    os.makedirs(TARGET_DIR, exist_ok=True)
+    shutil.copyfile(PICTURE, TARGET)
+    return os.path.getsize(TARGET)
 
 
 def main():
-    os.makedirs(DEST_DIR, exist_ok=True)
-    shutil.copyfile(SOURCE, DEST)
-    written = os.path.getsize(DEST)
-    print("wrote %s %d bytes" % (DEST, written))
+    size = place_picture()
+    print("wrote %s %d bytes" % (TARGET, size))
     print("truncated: none")
 
 
